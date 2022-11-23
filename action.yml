@@ -53,27 +53,23 @@ runs:
         $terraformdestroy = "${{ inputs.destroy }}"
         $custom_plan_flags = "${{ inputs.custom_plan_flags }}"
         $custom_apply_flags = "${{ inputs.custom_apply_flags }}"
-        if ($terraformapply -eq "false"){
-          $terraformapply = $false
-        }
-        if ($terraformdestroy -eq "false"){
-          $terraformapply = $false
-        }
-        terraform plan $custom_plan_flags
-        if ($terraformapply){
+        if ($terraformapply -eq "true"){
           terraform apply -auto-approve $custom_apply_flags
+        }
+        if ($terraformdestroy -eq "true"){
+          terraform destroy -auto-approve $custom_apply_flags
+        }
+        if ($terraformapply){
           $StateExists = Test-Path -Path ./terraform.tfstate -PathType Leaf
           if ($StateExists){
             openssl enc -in ./terraform.tfstate -aes-256-cbc -pbkdf2 -pass pass:"${{ inputs.encryptionkey }}" -out ../terraform.tfstate.enc
           }
-        } elseif ($terraformdestroy -eq "true") {
-            terraform destroy -auto-approve $custom_apply_flags
         }
       shell: pwsh
     - uses: actions/upload-artifact@v3
       with:
         name: "${{ github.ref_name }}-${{ inputs.folder }}-terraformstatefile"
-        path: ./terraform.tfstate.enc
+        path: ./${{ inputs.folder }}/terraform.tfstate.enc
 branding:
   icon: 'cloud'
   color: 'gray-dark'
