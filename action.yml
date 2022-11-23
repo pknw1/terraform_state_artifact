@@ -66,9 +66,8 @@ runs:
           if ($StateExists){
             openssl enc -in ./terraform.tfstate -aes-256-cbc -pbkdf2 -pass pass:"${{ inputs.encryptionkey }}" -out ../terraform.tfstate.enc
           }
-        }
-        if ($terraformdestroy){
-          terraform destroy -auto-approve $custom_apply_flags
+        } elseif ($terraformdestroy -eq "true") {
+            terraform destroy -auto-approve $custom_apply_flags
         }
       shell: pwsh
     - uses: actions/upload-artifact@v3
