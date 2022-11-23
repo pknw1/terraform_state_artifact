@@ -5,7 +5,7 @@ inputs:
   folder:
     description: folder
     required: false
-    default: '.'
+    default: ''
   encryptionkey:
     description: 'Used to read artifact and as a key to encrypt and decrypt the state file artifact'
     required: true
@@ -35,7 +35,7 @@ runs:
         $Token = "${{ github.token }}" | ConvertTo-SecureString -AsPlainText
         $RestResponse = Invoke-RestMethod -Authentication Bearer -Uri $ArtifactUri -Token $Token | Select-Object -ExpandProperty artifacts
         if ($RestResponse){
-          $MostRecentArtifactURI = $RestResponse | Sort-Object -Property created_at -Descending | where name -eq "${{ github.ref_name }}-terraformstatefile" | Select-Object -First 1 | Select-Object -ExpandProperty archive_download_url
+          $MostRecentArtifactURI = $RestResponse | Sort-Object -Property created_at -Descending | where name -eq "${{ github.ref_name }}-${{ inputs.folder }}-terraformstatefile" | Select-Object -First 1 | Select-Object -ExpandProperty archive_download_url
           Write-Host "Most recent artifact URI = $MostRecentArtifactURI"
           if ($MostRecentArtifactURI){
             Invoke-RestMethod -uri $MostRecentArtifactURI -Token $Token -Authentication bearer -outfile ./state.zip
@@ -62,7 +62,7 @@ runs:
       shell: pwsh
     - uses: actions/upload-artifact@v3
       with:
-        name: "${{ github.ref_name }}-terraformstatefile"
+        name: "${{ github.ref_name }}-${{ inputs.folder }}-terraformstatefile"
         path: ./terraform.tfstate.enc
 branding:
   icon: 'cloud'
