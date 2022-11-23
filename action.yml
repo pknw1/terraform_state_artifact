@@ -2,6 +2,10 @@ name: 'terraform_state_artifact'
 description: 'Sets up and runs Terraform, and creates an encrypted Terraform artifact'
 author: 'Sturla Bragason'
 inputs:
+  source_folder:
+    description: source folder in repo
+    required: true
+    default: '.'
   encryptionkey:
     description: 'Used to read artifact and as a key to encrypt and decrypt the state file artifact'
     required: true
@@ -17,11 +21,16 @@ inputs:
     description: 'Add custom flags to the terraform apply command'
     required: false
     default: ''
+    
 runs:
   using: "composite"
+  defaults:
+    run:
+      working-directory: ${{ inputs.source_folder }}
+        
   steps:
-    - uses: actions/checkout@v2
-    - uses: hashicorp/setup-terraform@v1
+    - uses: actions/checkout@v3
+    - uses: hashicorp/setup-terraform@v2
     - id: terraform
       run: |
         $Repo = "${{ github.repository }}"
@@ -54,9 +63,9 @@ runs:
           openssl enc -in ./terraform.tfstate -aes-256-cbc -pbkdf2 -pass pass:"${{ inputs.encryptionkey }}" -out ./terraform.tfstate.enc
         }
       shell: pwsh
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
-        name: terraformstatefile
+        name: "${{ github.ref_name }}-terraformstatefile"
         path: ./terraform.tfstate.enc
 branding:
   icon: 'cloud'
