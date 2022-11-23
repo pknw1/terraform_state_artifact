@@ -2,6 +2,10 @@ name: 'terraform_state_artifact'
 description: 'Sets up and runs Terraform, and creates an encrypted Terraform artifact'
 author: 'Sturla Bragason'
 inputs:
+  folder:
+    description: folder
+    required: false
+    default: '.'
   encryptionkey:
     description: 'Used to read artifact and as a key to encrypt and decrypt the state file artifact'
     required: true
@@ -31,7 +35,7 @@ runs:
         $Token = "${{ github.token }}" | ConvertTo-SecureString -AsPlainText
         $RestResponse = Invoke-RestMethod -Authentication Bearer -Uri $ArtifactUri -Token $Token | Select-Object -ExpandProperty artifacts
         if ($RestResponse){
-          $MostRecentArtifactURI = $RestResponse | Sort-Object -Property created_at -Descending | where name -eq "terraformstatefile" | Select-Object -First 1 | Select-Object -ExpandProperty archive_download_url
+          $MostRecentArtifactURI = $RestResponse | Sort-Object -Property created_at -Descending | where name -eq "${{ github.ref_name }}-terraformstatefile" | Select-Object -First 1 | Select-Object -ExpandProperty archive_download_url
           Write-Host "Most recent artifact URI = $MostRecentArtifactURI"
           if ($MostRecentArtifactURI){
             Invoke-RestMethod -uri $MostRecentArtifactURI -Token $Token -Authentication bearer -outfile ./state.zip
@@ -39,6 +43,7 @@ runs:
             openssl enc -d -in ./state/terraform.tfstate.enc -aes-256-cbc -pbkdf2 -pass pass:"${{ inputs.encryptionkey }}" -out ./terraform.tfstate
           }
         }
+        cd ${{ inputs.folder }}
         terraform init
         $terraformapply = "${{ inputs.apply }}"
         $custom_plan_flags = "${{ inputs.custom_plan_flags }}"
@@ -52,7 +57,7 @@ runs:
         }
         $StateExists = Test-Path -Path ./terraform.tfstate -PathType Leaf
         if ($StateExists){
-          openssl enc -in ./terraform.tfstate -aes-256-cbc -pbkdf2 -pass pass:"${{ inputs.encryptionkey }}" -out ./terraform.tfstate.enc
+          openssl enc -in ./terraform.tfstate -aes-256-cbc -pbkdf2 -pass pass:"${{ inputs.encryptionkey }}" -out ../terraform.tfstate.enc
         }
       shell: pwsh
     - uses: actions/upload-artifact@v3
