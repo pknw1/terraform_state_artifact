@@ -5,7 +5,7 @@ inputs:
   folder:
     description: folder
     required: false
-    default: ''
+    default: 'sandbox'
   encryptionkey:
     description: 'Used to read artifact and as a key to encrypt and decrypt the state file artifact'
     required: true
