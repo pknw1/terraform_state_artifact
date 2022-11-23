@@ -73,7 +73,7 @@ runs:
           terraform plan $custom_plan_flags 
         }
         if ($terraformapply -eq "true"){
-          terraform apply -auto-approve $custom_apply_flags
+          terraform apply -auto-approve $custom_apply_flags || exit 127
         }
         if ($terraformdestroy -eq "true"){
           terraform destroy -auto-approve $custom_apply_flags
