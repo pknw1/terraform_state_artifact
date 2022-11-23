@@ -35,11 +35,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: peterjgrainger/action-create-branch@v2.2.0
-      env:
-        GITHUB_TOKEN: ${{ inputs.github_pat }}
-      with:
-        branch: ${{ inputs.btanch_name }}
     - uses: actions/checkout@v3
       with:
         ref: ${{ inputs.branch_name }}
