@@ -6,6 +6,10 @@ inputs:
     description: folder
     required: false
     default: 'sandbox'
+  branch_name:
+    description: branch
+    required: false
+    default: 'main'
   encryptionkey:
     description: 'Used to read artifact and as a key to encrypt and decrypt the state file artifact'
     required: true
@@ -30,6 +34,8 @@ runs:
   using: "composite"
   steps:
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ inputs.branch_name }}
     - uses: hashicorp/setup-terraform@v2
     - id: terraform
       run: |
