@@ -1,6 +1,6 @@
 name: 'terraform_state_artifact'
 description: 'Sets up and runs Terraform, and creates an encrypted Terraform artifact'
-author: 'Sturla Bragason'
+author: 'Paul Kelleher'
 inputs:
   folder:
     description: folder
@@ -89,6 +89,10 @@ runs:
       with:
         name: "${{ inputs.branch_name }}-${{ inputs.folder }}-terraformstatefile"
         path: ./${{ inputs.folder }}/terraform.tfstate.enc
+    - uses: actions/upload-artifact@v3
+      with:
+        name: "${{ inputs.branch_name }}-${{ inputs.folder }}-template-terraform.zip"
+        path: ./${{ inputs.folder }}/user_setup/auto_globals.tf
 branding:
   icon: 'cloud'
   color: 'gray-dark'
