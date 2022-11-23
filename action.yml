@@ -24,13 +24,11 @@ inputs:
     
 runs:
   using: "composite"
-  defaults:
-    run:
-      working-directory: ${{ inputs.source_folder }}
-        
   steps:
     - uses: actions/checkout@v3
+      working-directory: ${{ inputs.source_folder }}
     - uses: hashicorp/setup-terraform@v2
+      working-directory: ${{ inputs.source_folder }}
     - id: terraform
       run: |
         $Repo = "${{ github.repository }}"
@@ -63,7 +61,9 @@ runs:
           openssl enc -in ./terraform.tfstate -aes-256-cbc -pbkdf2 -pass pass:"${{ inputs.encryptionkey }}" -out ./terraform.tfstate.enc
         }
       shell: pwsh
+      working-directory: ${{ inputs.source_folder }}
     - uses: actions/upload-artifact@v3
+      working-directory: ${{ inputs.source_folder }}
       with:
         name: "${{ github.ref_name }}-terraformstatefile"
         path: ./terraform.tfstate.enc
