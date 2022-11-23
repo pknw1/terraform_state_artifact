@@ -2,6 +2,10 @@ name: 'terraform_state_artifact'
 description: 'Sets up and runs Terraform, and creates an encrypted Terraform artifact'
 author: 'Sturla Bragason'
 inputs:
+  action:
+    description: choose terraform action
+    required: false
+    default: 'deploy'
   folder:
     description: folder
     required: false
@@ -29,6 +33,7 @@ runs:
     - uses: hashicorp/setup-terraform@v2
     - id: terraform
       run: |
+        cd ${{ inputs.folder }}
         $Repo = "${{ github.repository }}"
         $BaseUri = "https://api.github.com"
         $ArtifactUri = "$BaseUri/repos/$Repo/actions/artifacts"
@@ -43,7 +48,6 @@ runs:
             openssl enc -d -in ./state/terraform.tfstate.enc -aes-256-cbc -pbkdf2 -pass pass:"${{ inputs.encryptionkey }}" -out ./terraform.tfstate
           }
         }
-        cd ${{ inputs.folder }}
         terraform init
         $terraformapply = "${{ inputs.apply }}"
         $custom_plan_flags = "${{ inputs.custom_plan_flags }}"
@@ -51,16 +55,24 @@ runs:
         if ($terraformapply -eq "false"){
           $terraformapply = $false
         }
+        if ($action -eq "destroy"){
+          $terraformapply = $false
+          $terraformdestroy = $true
+        }
         terraform plan $custom_plan_flags
         if ($terraformapply){
           terraform apply -auto-approve $custom_apply_flags
+          $StateExists = Test-Path -Path ./terraform.tfstate -PathType Leaf
+          if ($StateExists){
+            openssl enc -in ./terraform.tfstate -aes-256-cbc -pbkdf2 -pass pass:"${{ inputs.encryptionkey }}" -out ../terraform.tfstate.enc
+          }
         }
-        $StateExists = Test-Path -Path ./terraform.tfstate -PathType Leaf
-        if ($StateExists){
-          openssl enc -in ./terraform.tfstate -aes-256-cbc -pbkdf2 -pass pass:"${{ inputs.encryptionkey }}" -out ../terraform.tfstate.enc
+        if ($terraformdestroy){
+          terraform destroy -auto-approve $custom_apply_flags
         }
       shell: pwsh
     - uses: actions/upload-artifact@v3
+       if: ${{ inputs.action == 'deploy' }}
       with:
         name: "${{ github.ref_name }}-${{ inputs.folder }}-terraformstatefile"
         path: ./terraform.tfstate.enc
