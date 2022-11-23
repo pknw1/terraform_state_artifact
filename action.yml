@@ -17,6 +17,10 @@ inputs:
     description: 'terraform apply'
     required: false
     default: false
+  status:
+    description: 'terraform status'
+    required: false
+    default: false
   destroy:
     description: 'terraform destroy'
     required: false
@@ -59,8 +63,15 @@ runs:
         terraform init
         $terraformapply = "${{ inputs.apply }}"
         $terraformdestroy = "${{ inputs.destroy }}"
+        $terraformstatus = "${{ inputs.status }}"
         $custom_plan_flags = "${{ inputs.custom_plan_flags }}"
         $custom_apply_flags = "${{ inputs.custom_apply_flags }}"
+        if ($terraformstatus -eq "true"){
+          terraform show
+        }
+        if ($terraformplan -eq "true"){
+          terraform plan $custom_plan_flags 
+        }
         if ($terraformapply -eq "true"){
           terraform apply -auto-approve $custom_apply_flags
         }
